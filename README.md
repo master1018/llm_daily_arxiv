@@ -61,7 +61,7 @@ Create and modify `basic.json` & `query.json` `keys.json`.
             "cs.SE",                  // Please refer to the arXiv website          
             "cs.CR"                   // for the code corresponding to the domain.
         ],
-      	"preference":"I have a particular interest in LLMs, especially LLMs apply in software engineering.
+      	"preference":"I have a particular interest in LLMs, especially LLMs apply in software engineering."
     }
 ]
 ```
@@ -89,7 +89,7 @@ def read_keys_json():
 
 ```shell
 cd source
-nohup python -u src/check_paper.py < log.txt &
+nohup python -u src/check_paper.py > log.txt &
 ```
 
 ## Refs
