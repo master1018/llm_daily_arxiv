@@ -1,0 +1,6 @@
+__pycache__/
+log.txt
+basic.json
+query.json
+keys.json
+last_arxiv.json
