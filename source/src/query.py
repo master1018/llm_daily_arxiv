@@ -28,11 +28,19 @@ def query_weekly_paper(config):
         for domain in domains:
             if domain not in first_papers:
                 first_papers[domain] = ""
+    sum_query = {"keywords": [], "domains": [], "preference": []}
+
+    for query in queries:
+        sum_query["keywords"].extend(query["keywords"])
+        sum_query["domains"].extend(query["domains"])
+        sum_query["preference"].append(query["preference"])
+    sum_query["keywords"] = list(set(sum_query["keywords"]))
+    sum_query["domains"] = list(set(sum_query["domains"]))
 
     print("first paper start")
     print(first_papers)
     paper_infos = get_weekly_papers(
-        queries, config["entry_per_page"], config["get_daily"])
+        [sum_query], config["entry_per_page"], config["get_daily"])
     print("first paper final")
     print(first_papers)
 
@@ -43,10 +51,9 @@ def query_weekly_paper(config):
     if paper_infos == [] or len(paper_infos) == 0:
         print("no paper query")
         return
-    content = utils.generate_html(paper_infos, queries)
+    contents = utils.generate_html(paper_infos, queries)
     subject = utils.generate_subject(config["get_daily"])
-    print("send to " + config["mail"]["receivers"][0])
-    utils.send_mails(config["mail"], subject, content)
+    utils.send_mails(config["mail"], subject, contents)
 
 def deduplicate_list(input_list):
     seen_values = set()
@@ -180,19 +187,23 @@ def get_related_papers_from_content(page_content, keywords, domain, preference =
             continue
 
         if check_val:
-            input = f"""
-            User Preference: {preference}
+            input_text = ""
+
+            for i in range(0, len(preference)):
+                input_text += f"""
+                User{i + 1} Preference: {preference}
+                """
+
+            input_text += f"""
             Title: {paper.title}
             Abstract: {abstract}
             """
             retry_times = 0
             while True:
-                llm_answer = call_openai_api(build_prompt(input))
+                llm_answer = call_openai_api(build_prompt(input_text))
                 try:
                     keywords = ""
                     five_points = ""
-                    score_map = {"boring": 0, "normal": 1, "interesting": 2}
-                    score = ""
                     if type(llm_answer["keywords"]) == list:
                         keywords = ', '.join(llm_answer["keywords"])
                     else:
@@ -201,10 +212,6 @@ def get_related_papers_from_content(page_content, keywords, domain, preference =
                         five_points = [it for it in llm_answer["five_points"]]
                     else:
                         five_points = [llm_answer["five_points"]]
-                    if llm_answer["score"] in score_map:
-                        score = score_map[llm_answer["score"]]
-                    else:
-                        score = 1
                     paper_info = {
                         'time': str(paper.updated.year).zfill(4) + str(paper.updated.month).zfill(2) + str(
                             paper.updated.day).zfill(2), 'title': paper.title,
@@ -217,7 +224,7 @@ def get_related_papers_from_content(page_content, keywords, domain, preference =
                         'topic': topic,
                         'keywords': keywords,
                         'summary': five_points,
-                        'score': score
+                        'score': llm_answer["score"]
                     }
                     break
                 except Exception as e:
