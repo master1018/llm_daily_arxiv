@@ -52,6 +52,7 @@ Create and modify `basic.json` & `query.json` `keys.json`.
 
 ```json
 [
+    // receiver 1 query config
     {
         "keywords": [                 // The keywords to be searched.
             "large language model",
@@ -62,7 +63,10 @@ Create and modify `basic.json` & `query.json` `keys.json`.
             "cs.CR"                   // for the code corresponding to the domain.
         ],
       	"preference":"I have a particular interest in LLMs, especially LLMs apply in software engineering."
-    }
+    },
+
+    // receiver 2 query config
+    {}
 ]
 ```
 
