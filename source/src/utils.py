@@ -11,46 +11,58 @@ keywords_dblp = ["large language model", "llm", "diagnosis", "incident", "cloud"
 CN_TZ = pytz.timezone('Asia/Shanghai')
 
 def generate_html(time_sorted_papers, queries):
-    content = ""
-    for paper in time_sorted_papers:
-            title = '<h3><a href="{}" target="_blank">{}</a></h3>'.format(
-                paper['pdf_link'], paper['title'])
+    html_contests = []
+    for i in range(0, len(queries)):
+        query = queries[i]
+        content = ""
+        check_keywords = query["keywords"]
+        check_domains = query["domains"]
+        for paper in time_sorted_papers:
+            if any(keyword.lower() in paper["keywords"].lower() for keyword in check_keywords) \
+                and any(domain.lower() in paper["primary_category"].lower() for domain in check_domains):
 
-            arxiv_link = '<p>arXiv link: <a href={0}>{0}</a></p>'.format(
-                paper["arxiv_link"])
+                title = '<h3><a href="{}" target="_blank">{}</a></h3>'.format(
+                    paper['pdf_link'], paper['title'])
 
-            primary_category = '<p>Primary Category: <b>{}</b></p>'.format(
-                paper['primary_category'])
+                arxiv_link = '<p>arXiv link: <a href={0}>{0}</a></p>'.format(
+                    paper["arxiv_link"])
 
-            suggestion_score = '<p>Suggestion Score: <b>{}</b></p>'.format(
-                paper['score'])
+                primary_category = '<p>Primary Category: <b>{}</b></p>'.format(
+                    paper['primary_category'])
 
-            journal_ref = ""
-            if paper['journal_ref'] is not None:
-                journal_ref = "<p>Journal-ref: {}</p>".format(
-                    paper['journal_ref'])
+                suggestion_score = '<p>Suggestion Score: <b>{}</b></p>'.format(
+                    paper['score'][i])
 
-            authors = '<p><b>{}</b></p>'.format(paper['authors'])
-            keywords_ = '<p>Keywords: <b>{}</b></p>'.format(paper['keywords'])
-            #summary = '<p>{}<p>'.format(paper['summary'])
-            summary = ""
-            for s in paper['summary']:
-                summary += '<p>{}<p>'.format(s)
-            #abstract = '<p>{}<p>'.format(paper['abstract'])
-            for query in queries:
-                keywords = query["keywords"]
-                for keyword in keywords:
-                    # abstract = abstract.replace(
-                    #     keyword, "<b>" + keyword + "</b>")
-                    summary = re.sub(
-                        r"(%s)" % keyword, repl_func, summary, flags=re.IGNORECASE)
+                journal_ref = ""
+                if paper['journal_ref'] is not None:
+                    journal_ref = "<p>Journal-ref: {}</p>".format(
+                        paper['journal_ref'])
 
-            new_paper = f"{title}{authors}{arxiv_link}{primary_category}{suggestion_score}{journal_ref}{keywords_}{summary}"
+                authors = '<p><b>{}</b></p>'.format(paper['authors'])
+                keywords_ = '<p>Keywords: <b>{}</b></p>'.format(paper['keywords'])
+                #summary = '<p>{}<p>'.format(paper['summary'])
+                summary = ""
+                for s in paper['summary']:
+                    summary += '<p>{}<p>'.format(s)
+                #abstract = '<p>{}<p>'.format(paper['abstract'])
+                for query in queries:
+                    keywords = query["keywords"]
+                    for keyword in keywords:
+                        # abstract = abstract.replace(
+                        #     keyword, "<b>" + keyword + "</b>")
+                        summary = re.sub(
+                            r"(%s)" % keyword, repl_func, summary, flags=re.IGNORECASE)
 
-            content += '{}<br/>'.format(new_paper)
+                new_paper = f"{title}{authors}{arxiv_link}{primary_category}{suggestion_score}{journal_ref}{keywords_}{summary}"
 
-    html_content = f"<html><body>{content}</body></html>"
-    return html_content
+                new_paper = f'<div style="background-color: #f0f0f0; padding: 10px; margin-bottom: 10px;">{new_paper}</div>'
+                content += '{}<br/>'.format(new_paper)
+
+        html_content = f"<html><body>{content}</body></html>"
+
+        html_contests.append(html_content)
+
+    return html_contests
 
 def generate_html_dblp(dblp_papers):
     content = ""
@@ -140,7 +152,7 @@ def generate_subject_dblp():
 
     return subject
 
-def send_mails(mail_config, subject, content):
+def send_mails(mail_config, subject, contents):
     try:
         if not mail_config["enable"]:
             return
@@ -148,7 +160,10 @@ def send_mails(mail_config, subject, content):
         mail = outlook.Outlook(mail_config)
         mail.login(mail_config["sender"], mail_config["auth"])
 
-        for receiver in mail_config["receivers"]:
+        for i in range(0, len(mail_config["receivers"])):
+            receiver = mail_config["receivers"][i]
+            content = contents[i]
+            print(f"send to {receiver}")
             mail.sendEmail(receiver, subject, content)
 
     except smtplib.SMTPException:
