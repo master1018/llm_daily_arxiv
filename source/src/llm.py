@@ -11,7 +11,7 @@ g_openai_client = read_keys_json()['openai']
 openai_client = OpenAI(api_key=g_openai_client["api_key"], base_url=g_openai_client["base_url"])
 
 def build_prompt(text: str):
-    json_format = """{"keywords": [keyword1, ...], "five_points": "["<point1>", "<point2>", "<point3>", "<point4>", "<point5>"]", "score":"<boring/normal/interesting>"}"""
+    json_format = """{"keywords": [keyword1, ...], "five_points": "["<point1>", "<point2>", "<point3>", "<point4>", "<point5>"]", "score":"["<boring/normal/interesting>", "<boring/normal/interesting>"]"}"""
     example_output = """{
   "keywords": ["Fault Localization", "Large Language Models", "Query Reformulation", "Learning-to-Rank", "Bug Report Analysis"],
   "five_points": [
@@ -21,7 +21,7 @@ def build_prompt(text: str):
     "4. Implements LLmiRQ+ for interactive query reformulation and a learning-to-rank model using features like class name matches and call graph scores to refine search results.",
     "5. Integrates advanced large language models to enhance fault localization accuracy, achieving superior performance metrics over seven state-of-the-art techniques."
   ],
-    "score": "interesting"
+    "score": ["interesting", "boring"]
 }"""
     prompt = f"""
     ### Instruction
@@ -49,7 +49,9 @@ Last, give a score for the paper based on User Preference. The score can be 'bor
 ### Example
 Input1:
 
-User Preference: I have a particular interest in how large language models are applied within software engineering, especially software test, software bug with LLMs.
+User1 Preference: I have a particular interest in how large language models are applied within software engineering, especially software test, software bug with LLMs.
+
+User2 Preference: I am interested in the application of machine learning.
 
 Title: Enhancing IR-based Fault Localization using Large Language Models
 
@@ -61,7 +63,7 @@ Output1:
 {example_output}
 ```
 
-### User Input:
+### Input:
 
 {text}    
 """
@@ -91,7 +93,7 @@ def call_openai_api(prompt: str, format: str = "") -> any:
             max_tokens=4096,
             response_format={"type": "json_object"}
         )
-    ret_json = {"keywords":[], "five_points":""}
+    ret_json = {"keywords":[], "five_points":[], "score":[]}
     try:
         tmp = json.loads(response.choices[0].message.content)
         if "keywords" in tmp:
@@ -107,7 +109,8 @@ def call_openai_api(prompt: str, format: str = "") -> any:
 
 if __name__ == "__main__":
     text = """
-    User Preference: I have a particular interest in how large language models are applied within software engineering, especially software test with LLMs.
+    User1 Preference: I have a particular interest in how large language models are applied within software engineering, especially software test with LLMs.
+    User2 Preference: I am interested in the application of machine learning.
     Title: Leveraging Large Language Models to Generate Course-specific Semantically Annotated Learning Objects
     Abstract: Background: Over the past few decades, the process and methodology of automated question generation (AQG) have undergone significant transformations. Recent progress in generative natural language models has opened up new potential in the generation of educational content.
 Objectives: This paper explores the potential of large language models (LLMs) for generating computer science questions that are sufficiently annotated for automatic learner model updates, are fully situated in the context of a particular course, and address the cognitive dimension understand.
