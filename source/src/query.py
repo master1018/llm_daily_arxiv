@@ -5,7 +5,8 @@ import utils
 import datetime
 import pytz
 import json
-from llm import call_openai_api, build_prompt
+from llm import call_openai_api, build_prompt, build_prompt_doc_read
+from doc_read.pdf_reader import ArxivPdfReader
 
 first_papers = {}
 
@@ -199,8 +200,25 @@ def get_related_papers_from_content(page_content, keywords, domain, preference =
             Abstract: {abstract}
             """
             retry_times = 0
+
+            ### Begin
+            arxiv_pdf_reader = ArxivPdfReader(str(paper.links[-1]))
+            paper_contents = []
+            try:
+                paper_contents = arxiv_pdf_reader.get_parse_result()
+            except Exception as e:
+                print(e)
+                print("Error when parsing pdf")
+                paper_contents = []
+            if paper_contents == []:
+                paper_contents = ["Not contents found in this paper, please only generate keywords, points only by the abstract and title."]
+            ### End
+
             while True:
-                llm_answer = call_openai_api(build_prompt(input_text))
+                # llm_answer = call_openai_api(build_prompt(input_text))
+                ### Begin
+                llm_answer = call_openai_api(build_prompt_doc_read(paper_contents, input_text))
+                ### End
                 try:
                     keywords = ""
                     five_points = ""
@@ -212,6 +230,7 @@ def get_related_papers_from_content(page_content, keywords, domain, preference =
                         five_points = [it for it in llm_answer["five_points"]]
                     else:
                         five_points = [llm_answer["five_points"]]
+                    
                     paper_info = {
                         'time': str(paper.updated.year).zfill(4) + str(paper.updated.month).zfill(2) + str(
                             paper.updated.day).zfill(2), 'title': paper.title,
