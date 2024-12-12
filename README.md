@@ -10,6 +10,30 @@ pip install openai
 pip install apscheduler
 ```
 
+Install Magic-Pdf: https://github.com/myhloli/Magic-PDF
+If you failed to install magic-pdf, please remove and modify the following code in query.py:
+
+```python
+            ### Begin
+            arxiv_pdf_reader = ArxivPdfReader(str(paper.links[-1]))
+            paper_contents = []
+            try:
+                paper_contents = arxiv_pdf_reader.get_parse_result()
+            except Exception as e:
+                print(e)
+                print("Error when parsing pdf")
+                paper_contents = []
+            if paper_contents == []:
+                paper_contents = ["Not contents found in this paper, please only generate keywords, points only by the abstract and title."]
+            ### End
+
+            while True:
+                # llm_answer = call_openai_api(build_prompt(input_text)) # replace with this line
+                ### Begin
+                llm_answer = call_openai_api(build_prompt_doc_read(paper_contents, input_text))
+                ### End
+```
+
 ## Configuration
 
 Create and modify `basic.json` & `query.json` `keys.json`.
