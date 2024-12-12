@@ -7,6 +7,7 @@ import pytz
 import json
 from llm import call_openai_api, build_prompt, build_prompt_doc_read
 from doc_read.pdf_reader import ArxivPdfReader
+import time
 
 first_papers = {}
 
@@ -257,5 +258,6 @@ def get_related_papers_from_content(page_content, keywords, domain, preference =
                         print(llm_answer)
                         break
                     print("retry times: ", retry_times)
+                    time.sleep(30)
 
     return paper_infos
