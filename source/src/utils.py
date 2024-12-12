@@ -30,9 +30,13 @@ def generate_html(time_sorted_papers, queries):
                 primary_category = '<p>Primary Category: <b>{}</b></p>'.format(
                     paper['primary_category'])
 
-                suggestion_score = '<p>Suggestion Score: <b>{}</b></p>'.format(
-                    paper['score'][i])
-
+                try:
+                    suggestion_score = '<p>Suggestion Score: <b>{}</b></p>'.format(
+                        paper['score'][i])
+                except:
+                    print(paper['score'])
+                    suggestion_score = '<p>Suggestion Score: <b>{}</b></p>'.format(
+                        paper['score'][0])
                 journal_ref = ""
                 if paper['journal_ref'] is not None:
                     journal_ref = "<p>Journal-ref: {}</p>".format(

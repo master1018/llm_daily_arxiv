@@ -226,6 +226,7 @@ def get_related_papers_from_content(page_content, keywords, domain, preference =
                         'summary': five_points,
                         'score': llm_answer["score"]
                     }
+                    paper_infos.append(paper_info)
                     break
                 except Exception as e:
                     retry_times += 1
@@ -237,6 +238,5 @@ def get_related_papers_from_content(page_content, keywords, domain, preference =
                         print(llm_answer)
                         break
                     print("retry times: ", retry_times)
-            paper_infos.append(paper_info)
 
     return paper_infos
